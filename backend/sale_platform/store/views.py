@@ -1,86 +1,50 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import User, Address, Category, Product, Order, OrderItem, Payment, Review, Cart
-from .serializers import (
-    UserSerializer, AddressSerializer, CategorySerializer, ProductSerializer,
-    OrderSerializer, OrderItemSerializer, PaymentSerializer, ReviewSerializer, CartSerializer
-)
+from .models import ProductForm, ProductInstance
+from .serializers import ProductFormSerializer
+from rest_framework.permissions import IsAuthenticated
+from .serializers import ProductInstanceSerializer
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user
+class ProductFormViewSet(viewsets.ModelViewSet):
+    queryset = ProductForm.objects.all()
+    serializer_class = ProductFormSerializer
+    permission_classes = [IsAuthenticated]
 
-class UserViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated:
+            return ProductForm.objects.filter(user=user)
+        return ProductForm.objects.none()
+
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)  # user رو ست کن
+
+    # action preview رو نگه دار
+    @action(detail=True, methods=['get'])
+    def preview(self, request, pk=None):
+        form = self.get_object()
+        return Response({'fields': form.fields_json})
+    
+
+class ProductInstanceViewSet(viewsets.ModelViewSet):
+    queryset = ProductInstance.objects.all().order_by("-created_at")
+    serializer_class = ProductInstanceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+from rest_framework import generics
+from .serializers import RegisterSerializer
+from django.contrib.auth.models import User
+
+class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
+    serializer_class = RegisterSerializer
 
-class AddressViewSet(viewsets.ModelViewSet):
-    queryset = Address.objects.all()
-    serializer_class = AddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
-
-class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    filterset_fields = ['category']
-    search_fields = ['name', 'description']
-
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        if self.request.user.is_superuser():
-            return self.queryset
-        return self.queryset.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminOrReadOnly]
-
-    def get_queryset(self):
-        if self.request.user.is_superuser():
-            return self.queryset
-        return self.queryset.filter(order__user=self.request.user)
-
-class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return self.queryset.filter(product__id=self.kwargs.get('product_pk', None))
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class CartViewSet(viewsets.ModelViewSet):
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
-
-    @action(detail=False, methods=['post'])
-    def clear_cart(self, request):
-        self.get_queryset().delete()
-        return Response({'message': 'Cart cleared'})

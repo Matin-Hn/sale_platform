@@ -1,0 +1,20 @@
+/* styles.css - simple styling for clarity */
+body { font-family: Inter, Arial, sans-serif; margin:0; padding:0; background:#f7f7fb; color:#111 }
+.header { background:#fff; padding:12px 20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center }
+.header nav a { margin-left:12px; text-decoration:none; color:#333 }
+.container { padding:20px; max-width:1000px; margin:20px auto; }
+.card { background:#fff; padding:18px; border-radius:8px; box-shadow:0 1px 4px rgba(15,15,15,0.04) }
+.list-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed #eee }
+.meta { font-size:12px; color:#666 }
+.actions .btn { margin-left:8px }
+.btn { padding:8px 12px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer }
+.btn.primary { background:#0b74de; color:#fff; border-color:#0a66c2 }
+.btn.danger { background:#ffecec; border-color:#f5c2c2 }
+.error { color:#b00020; background:#fff0f0; padding:8px; border-radius:6px; margin-bottom:8px }
+.field-row { display:flex; gap:8px; align-items:center; margin-bottom:8px }
+.field-row input, .field-row select { padding:6px; min-width:150px }
+.field-name { width:220px }
+.field-options { width:260px }
+.checkbox { display:flex; align-items:center; gap:6px }
+.controls { margin-top:12px; display:flex; gap:8px }
+.muted { color:#666 }

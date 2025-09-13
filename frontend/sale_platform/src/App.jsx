@@ -1,21 +1,50 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import ProductsPage from './pages/ProductsPage.jsx';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
+import Login from "./pages/Login";
+import FormsPage from "./pages/FormsPage";
+import ItemsPage from "./pages/ItemsPage";
+import RegisterPage from "./pages/RegisterPage"
 
-console.log('App.jsx loaded'); // برای دیباگ
+function App() {
+  const isAuthenticated = !!localStorage.getItem("access");
 
-const App = () => {
   return (
-    <div>
-      <ProductsPage />
-    </div>
-  );
-};
+    <Router>
+      {(
+  <nav style={{ padding: "10px", borderBottom: "1px solid #ddd", marginBottom: "20px" }}>
+    <Link to="/forms" style={{ marginRight: "15px" }}>📋 فرم‌ها</Link>
+    <Link to="/items">📦 آیتم‌ها</Link>
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = createRoot(rootElement);
-  root.render(<App />);
-} else {
-  console.error('Root element not found');
+    {isAuthenticated ? (
+      // اگر کاربر لاگین بود => خروج
+      <button
+        style={{ float: "left", background: "transparent", border: "none", cursor: "pointer", color: "red" }}
+        onClick={() => {
+          localStorage.clear();
+          window.location.href = "/login";
+        }}
+      >
+        🚪 خروج
+      </button>
+    ) : (
+      // اگر لاگین نبود => ورود و ثبت‌نام
+      <>
+        <Link style={{ float: "left", marginRight: "10px" }} to="/register">ثبت نام</Link>
+        <Link style={{ float: "left" }} to="/login">ورود</Link>
+      </>
+    )}
+  </nav>
+)}
+
+      <Routes>
+        <Route path="/login" element={<Login onLogin={() => (window.location.href = "/forms")} />} />
+        <Route path="/forms" element={isAuthenticated ? <FormsPage /> : <Navigate to="/login" />} />
+        <Route path="/items" element={isAuthenticated ? <ItemsPage /> : <Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/forms" : "/login"} replace />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Routes>
+    </Router>
+  );
 }
+
+export default App;
